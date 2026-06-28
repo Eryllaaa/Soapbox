@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Soapbox.Networking;
+using UnityEngine;
 
 /// <summary>
 /// Self-contained suspension spring.
@@ -12,7 +13,12 @@
 ///   Suspension will slide that transform up and down along the spring axis;
 ///   neither script holds a reference to the other component.
 ///
-/// Who this script knows about : nobody (only a plain Transform).
+/// Networking
+/// ──────────
+/// In a multiplayer session only the instance that owns the simulation runs
+/// the spring. Remote clones are disabled via <see cref="NetworkOwnershipGate"/>.
+///
+/// Who this script knows about : nobody (only a plain Transform + the gate).
 /// </summary>
 public class Suspension : MonoBehaviour
 {
@@ -38,25 +44,30 @@ public class Suspension : MonoBehaviour
     // -------------------------------------------------------------------------
 
     private Rigidbody _rb;
+    private bool _warnedMissingRigidbody;
+    private bool _warnedMissingWheel;
 
     // -------------------------------------------------------------------------
     // Unity lifecycle
     // -------------------------------------------------------------------------
 
-    private void Awake()
+    private void OnEnable()
     {
-        _rb = GetComponentInParent<Rigidbody>();
+        // Gate runs on enable (not Awake) so Mirror has time to assign
+        // isOwned / netId before we decide whether to keep the component.
+        if (!NetworkOwnershipGate.KeepLocal(this)) return;
 
-        if (_rb == null)
-            Debug.LogError($"[Suspension] No Rigidbody found in parent hierarchy of '{name}'.", this);
-
-        if (_wheelTransform == null)
-            Debug.LogWarning($"[Suspension] '_wheelTransform' is not assigned on '{name}'. " +
-                             "The spring will still apply force but nothing will be repositioned.", this);
+        EnsureRigidbody();
+        WarnIfMissingWheel();
     }
 
     private void FixedUpdate()
     {
+        // Lazily re-acquire the Rigidbody in case Mirror's PredictedRigidbody
+        // moved the physics components onto a ghost object at runtime.
+        if (_rb == null) EnsureRigidbody();
+        if (_rb == null) return;
+
         bool grounded = Physics.Raycast(
             transform.position,
             -transform.up,
@@ -75,9 +86,37 @@ public class Suspension : MonoBehaviour
     // Private helpers
     // -------------------------------------------------------------------------
 
+    private void EnsureRigidbody()
+    {
+        if (_rb != null) return;
+
+        _rb = GetComponentInParent<Rigidbody>();
+
+        if (_rb == null && !_warnedMissingRigidbody)
+        {
+            Debug.LogError($"[Suspension] No Rigidbody found in parent hierarchy of '{name}'. " +
+                           "Suspension will stay inert until one is available.", this);
+            _warnedMissingRigidbody = true;
+        }
+    }
+
+    private void WarnIfMissingWheel()
+    {
+        if (_wheelTransform == null && !_warnedMissingWheel)
+        {
+            Debug.LogWarning($"[Suspension] '_wheelTransform' is not assigned on '{name}'. " +
+                             "The spring will still apply force but nothing will be repositioned.", this);
+            _warnedMissingWheel = true;
+        }
+    }
+
     /// <summary>Computes and applies the damped spring force to the rigidbody.</summary>
     private void ApplySpring(RaycastHit hit)
     {
+        // Defensive — should not happen because FixedUpdate guards above,
+        // but keep the helper safe in case it's called from elsewhere later.
+        if (_rb == null) return;
+
         Vector3 springDir = hit.normal;
         Vector3 pointVelocity = _rb.GetPointVelocity(hit.point);
 

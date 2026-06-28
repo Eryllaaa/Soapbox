@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 7194128923028107043}
   - component: {fileID: 6380864474668977216}
   - component: {fileID: 7132799404628376847}
+  - component: {fileID: 3539996637392637338}
+  - component: {fileID: 5131683530808188084}
   m_Layer: 0
   m_Name: Test Vehicle
   m_TagString: Untagged
@@ -50,6 +52,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7eaba7531a9b20543ba0a76e7e3064e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VehicleController
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
   _steeringWheels:
   - {fileID: 5623298774435562824}
   - {fileID: 5039364715256781208}
@@ -59,6 +64,8 @@ MonoBehaviour:
   _maxSteerAngle: 10
   _steerSpeed: 3
   _maxSpeed: 30
+  _steerSendThreshold: 0.01
+  _treatAsLocalOwnerWhenOffline: 1
 --- !u!54 &7132799404628376847
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -86,6 +93,60 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &3539996637392637338
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4209155601020221814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 2184480911
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!114 &5131683530808188084
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4209155601020221814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d38927cdc6024b9682b5fe9778b9ef99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror.Components::Mirror.PredictedRigidbody
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  predictedRigidbody: {fileID: 7132799404628376847}
+  mode: 0
+  motionSmoothingVelocityThreshold: 0.1
+  motionSmoothingAngularVelocityThreshold: 5
+  motionSmoothingTimeTolerance: 0.5
+  stateHistoryLimit: 32
+  recordInterval: 0.05
+  onlyRecordChanges: 1
+  compareLastFirst: 1
+  positionCorrectionThreshold: 0.1
+  rotationCorrectionThreshold: 5
+  oneFrameAhead: 1
+  snapThreshold: 2
+  showGhost: 1
+  ghostVelocityThreshold: 0.1
+  localGhostMaterial: {fileID: 2100000, guid: 411a48b4a197d4924bec3e3809bc9320, type: 2}
+  remoteGhostMaterial: {fileID: 2100000, guid: 04f0b2088c857414393bab3b80356776, type: 2}
+  checkGhostsEveryNthFrame: 4
+  positionInterpolationSpeed: 15
+  rotationInterpolationSpeed: 10
+  teleportDistanceMultiplier: 10
+  reduceSendsWhileIdle: 1
 --- !u!1 &6724011324111934602
 GameObject:
   m_ObjectHideFlags: 0

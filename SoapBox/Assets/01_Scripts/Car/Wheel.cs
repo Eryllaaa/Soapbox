@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Soapbox.Networking;
+using UnityEngine;
 
 /// <summary>
 /// Handles wheel-level physics for a gravity-driven soapbox racer:
@@ -15,7 +16,14 @@
 /// • The VehicleController (or any other system) drives this component through
 ///   <see cref="Brake"/> and <see cref="StopBraking"/>.
 ///
-/// Who this script knows about : nobody.
+/// Networking
+/// ──────────
+/// Physics must only run on the instance that owns the simulation. In a
+/// multiplayer session <see cref="NetworkOwnershipGate.KeepLocal"/> disables
+/// the component on remote clones so they don't fight the authoritative one.
+/// In single-player (no NetworkIdentity in the hierarchy) the gate is a no-op.
+///
+/// Who this script knows about : nobody (only <c>NetworkOwnershipGate</c>).
 /// </summary>
 public class Wheel : MonoBehaviour
 {
@@ -58,6 +66,7 @@ public class Wheel : MonoBehaviour
     private bool _isBraking;
     private float _activeGrip;
     private bool _isGrounded;
+    private bool _warnedMissingRigidbody;
 
     private Vector3 _groundedRaycastPadding => transform.up * 0.1f;
 
@@ -65,17 +74,23 @@ public class Wheel : MonoBehaviour
     // Unity lifecycle
     // -------------------------------------------------------------------------
 
-    private void Awake()
+    private void OnEnable()
     {
-        _rb = GetComponentInParent<Rigidbody>();
-        _activeGrip = _grip;
+        // Gate runs on enable (not Awake) so Mirror has time to assign
+        // isOwned / netId before we decide whether to keep the component.
+        if (!NetworkOwnershipGate.KeepLocal(this)) return;
 
-        if (_rb == null)
-            Debug.LogError($"[Wheel] No Rigidbody found in parent hierarchy of '{name}'.", this);
+        EnsureRigidbody();
+        _activeGrip = _grip;
     }
 
     private void FixedUpdate()
     {
+        // Lazily re-acquire the Rigidbody — Mirror's PredictedRigidbody may
+        // have moved the physics components onto a ghost object at runtime.
+        if (_rb == null) EnsureRigidbody();
+        if (_rb == null) return;
+
         _isGrounded = Physics.Raycast(
             transform.position + _groundedRaycastPadding,
             -transform.up,
@@ -97,12 +112,28 @@ public class Wheel : MonoBehaviour
     }
 
     // -------------------------------------------------------------------------
-    // Private physics helpers
+    // Private helpers
     // -------------------------------------------------------------------------
+
+    private void EnsureRigidbody()
+    {
+        if (_rb != null) return;
+
+        _rb = GetComponentInParent<Rigidbody>();
+
+        if (_rb == null && !_warnedMissingRigidbody)
+        {
+            Debug.LogError($"[Wheel] No Rigidbody found in parent hierarchy of '{name}'. " +
+                           "Wheel will stay inert until one is available.", this);
+            _warnedMissingRigidbody = true;
+        }
+    }
 
     /// <summary>Resists lateral sliding (cornering / steering grip).</summary>
     private void ApplySideFriction()
     {
+        if (_rb == null) return;
+
         Vector3 steeringDir = transform.right;
         Vector3 tireWorldVel = _rb.GetPointVelocity(transform.position);
 
@@ -116,6 +147,8 @@ public class Wheel : MonoBehaviour
     /// <summary>Applies a force opposing the current forward velocity.</summary>
     private void ApplyBraking()
     {
+        if (_rb == null) return;
+
         float brakingFactor = Vector3.Dot(transform.forward, _rb.linearVelocity);
 
         if (Mathf.Abs(brakingFactor) < 0.01f) return;
@@ -134,4 +167,24 @@ public class Wheel : MonoBehaviour
 
         _tireVisual.localRotation *= Quaternion.Euler(rollDeg, 0f, 0f);
     }
+
+    // -------------------------------------------------------------------------
+    // Debug gizmos
+    // -------------------------------------------------------------------------
+
+#if UNITY_EDITOR
+    private void OnDrawGizmosSelected()
+    {
+        // Forward ray (turns when the wheel is steered).
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawLine(transform.position, transform.position + transform.forward * 0.5f);
+
+        // Grounded state.
+        if (Application.isPlaying)
+        {
+            Gizmos.color = _isGrounded ? Color.green : Color.red;
+            Gizmos.DrawWireSphere(transform.position, 0.08f);
+        }
+    }
+#endif
 }
