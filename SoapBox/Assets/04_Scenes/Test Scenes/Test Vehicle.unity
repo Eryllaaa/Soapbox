@@ -260,8 +260,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: 0.7071066, w: 0.70710695}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.0625, z: 0.5}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.8, y: 0.16000001, z: 0.8}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 899019940}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
@@ -350,8 +350,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: 0.7071066, w: 0.70710695}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.0625, z: 0.5}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.8, y: 0.16000001, z: 0.8}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1082330115}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
@@ -458,10 +458,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Wheel
   _grip: 0.8
-  _gripWhenBraking: 0.4
-  _frictionStrength: 10
-  _power: 1000
-  _brakingPower: 1000
+  _gripWhenBraking: 0.3
+  _frictionStrength: 20
+  _power: 3000
+  _brakingPower: 500
   _groundCheckDistance: 0.5
   _groundMask:
     serializedVersion: 2
@@ -493,7 +493,7 @@ Transform:
   m_GameObject: {fileID: 248713082}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.8125, y: -0.375, z: 0.75}
+  m_LocalPosition: {x: 1.125, y: -0.375, z: 1.25}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -513,9 +513,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Suspension
   _wheelTransform: {fileID: 926435252}
-  _restDistance: 0.4
-  _springStrength: 100
-  _springDamp: 2.5
+  _restDistance: 0.6
+  _springStrength: 150
+  _springDamp: 10
   _groundMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -566,9 +566,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Wheel
   _grip: 0.8
   _gripWhenBraking: 0.4
-  _frictionStrength: 12
-  _power: 1000
-  _brakingPower: 1000
+  _frictionStrength: 20
+  _power: 3000
+  _brakingPower: 2000
   _groundCheckDistance: 0.5
   _groundMask:
     serializedVersion: 2
@@ -600,7 +600,7 @@ Transform:
   m_GameObject: {fileID: 397002639}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.8125, y: -0.375, z: -0.75}
+  m_LocalPosition: {x: -1.125, y: -0.375, z: -1.25}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -620,9 +620,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Suspension
   _wheelTransform: {fileID: 189987887}
-  _restDistance: 0.4
-  _springStrength: 100
-  _springDamp: 2.5
+  _restDistance: 0.6
+  _springStrength: 150
+  _springDamp: 10
   _groundMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -651,7 +651,7 @@ Transform:
   m_GameObject: {fileID: 547451872}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.375, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -797,7 +797,7 @@ Transform:
   m_GameObject: {fileID: 624135218}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.8125, y: -0.375, z: -0.75}
+  m_LocalPosition: {x: 1.125, y: -0.375, z: -1.25}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -817,9 +817,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Suspension
   _wheelTransform: {fileID: 2007692139}
-  _restDistance: 0.4
-  _springStrength: 100
-  _springDamp: 2.5
+  _restDistance: 0.6
+  _springStrength: 150
+  _springDamp: 10
   _groundMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -1088,7 +1088,7 @@ Transform:
   m_GameObject: {fileID: 899019939}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.375, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1255,9 +1255,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Wheel
   _grip: 0.8
   _gripWhenBraking: 0.4
-  _frictionStrength: 10
-  _power: 1000
-  _brakingPower: 1000
+  _frictionStrength: 20
+  _power: 3000
+  _brakingPower: 2000
   _groundCheckDistance: 0.5
   _groundMask:
     serializedVersion: 2
@@ -1518,7 +1518,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.25, y: 1, z: 2}
+  m_LocalScale: {x: 1.499925, y: 1.0000374, z: 3}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1124855192}
@@ -1626,7 +1626,7 @@ Transform:
   m_GameObject: {fileID: 1082330114}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.375, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1670,9 +1670,9 @@ MonoBehaviour:
   - {fileID: 189987888}
   - {fileID: 2007692140}
   _brakeWheels:
-  - {fileID: 318513412}
-  - {fileID: 926435253}
-  _maxSteerAngle: 20
+  - {fileID: 189987888}
+  - {fileID: 2007692140}
+  _maxSteerAngle: 10
   _steerSpeed: 3
   _topSpeed: 30
 --- !u!4 &1124855192
@@ -1684,7 +1684,7 @@ Transform:
   m_GameObject: {fileID: 1124855190}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 49}
+  m_LocalPosition: {x: 27.5, y: 2, z: -14.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1703,10 +1703,10 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1124855190}
   serializedVersion: 5
-  m_Mass: 500
+  m_Mass: 1000
   m_LinearDamping: 0
-  m_AngularDamping: 0
-  m_CenterOfMass: {x: 0, y: -0.3, z: 0}
+  m_AngularDamping: 0.1
+  m_CenterOfMass: {x: 0, y: -0.5, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
   m_IncludeLayers:
@@ -1974,7 +1974,7 @@ Transform:
   m_GameObject: {fileID: 1269827949}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.8125, y: -0.375, z: 0.75}
+  m_LocalPosition: {x: -1.125, y: -0.375, z: 1.25}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1994,9 +1994,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Suspension
   _wheelTransform: {fileID: 318513411}
-  _restDistance: 0.4
-  _springStrength: 100
-  _springDamp: 2.5
+  _restDistance: 0.6
+  _springStrength: 150
+  _springDamp: 10
   _groundMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -2325,8 +2325,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: 0.7071066, w: 0.70710695}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.0625, z: 0.5}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.8, y: 0.16000001, z: 0.8}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 547451873}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
@@ -2412,7 +2412,7 @@ Transform:
   m_GameObject: {fileID: 1638189077}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.375, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2447,8 +2447,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: 0.7071066, w: 0.70710695}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.0625, z: 0.5}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.8, y: 0.16000001, z: 0.8}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1638189078}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
@@ -2668,10 +2668,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Wheel
   _grip: 0.8
-  _gripWhenBraking: 0.4
-  _frictionStrength: 10
-  _power: 1000
-  _brakingPower: 1000
+  _gripWhenBraking: 0.3
+  _frictionStrength: 20
+  _power: 3000
+  _brakingPower: 500
   _groundCheckDistance: 0.5
   _groundMask:
     serializedVersion: 2

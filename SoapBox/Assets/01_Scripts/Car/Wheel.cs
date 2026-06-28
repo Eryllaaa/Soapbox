@@ -89,7 +89,6 @@ public class Wheel : MonoBehaviour
             _groundCheckDistance,
             _groundMask
         );
-        print(_isGrounded);
 
         if (_isGrounded)
         {
