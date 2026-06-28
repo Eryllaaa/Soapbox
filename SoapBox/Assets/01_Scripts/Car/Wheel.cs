@@ -1,18 +1,19 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
-/// Handles all wheel-level physics: side friction, acceleration, and braking.
+/// Handles wheel-level physics for a gravity-driven soapbox racer:
+/// side friction (grip / cornering) and braking only.
+/// Acceleration has been removed — the vehicle is pushed solely by gravity.
 ///
 /// Setup
-/// ?????
-/// � Place this on its own GameObject (the "wheel pivot") that is a child of
+/// ─────
+/// • Place this on its own GameObject (the "wheel pivot") that is a child of
 ///   the vehicle body.
-/// � The Suspension component lives on a *sibling* GameObject and will slide
-///   this transform's position along the spring axis � Wheel never references
+/// • The Suspension component lives on a *sibling* GameObject and will slide
+///   this transform's position along the spring axis — Wheel never references
 ///   Suspension.
-/// � The VehicleController (or any other system) drives this component through
-///   the three public members: <see cref="AccelInput"/>, <see cref="TopSpeed"/>,
-///   <see cref="Brake"/>, and <see cref="StopBraking"/>.
+/// • The VehicleController (or any other system) drives this component through
+///   <see cref="Brake"/> and <see cref="StopBraking"/>.
 ///
 /// Who this script knows about : nobody.
 /// </summary>
@@ -27,9 +28,6 @@ public class Wheel : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float _gripWhenBraking = 0.4f;
     [SerializeField, Min(0f)] private float _frictionStrength = 1f;
 
-    [Header("Acceleration")]
-    [SerializeField, Min(0f)] private float _power = 500f;
-
     [Header("Braking")]
     [SerializeField, Min(0f)] private float _brakingPower = 800f;
 
@@ -43,14 +41,8 @@ public class Wheel : MonoBehaviour
     [SerializeField] private Transform _tireVisual;
 
     // -------------------------------------------------------------------------
-    // Public API � driven by an external controller
+    // Public API — driven by an external controller
     // -------------------------------------------------------------------------
-
-    /// <summary>Normalised throttle input [0 � 1].</summary>
-    public float AccelInput { get; set; }
-
-    /// <summary>Maximum forward speed used to shape the torque curve (m/s).</summary>
-    public float TopSpeed { get; set; } = 30f;
 
     /// <summary>Tell the wheel to apply braking force this physics step.</summary>
     public void Brake() => _isBraking = true;
@@ -66,6 +58,7 @@ public class Wheel : MonoBehaviour
     private bool _isBraking;
     private float _activeGrip;
     private bool _isGrounded;
+
     private Vector3 _groundedRaycastPadding => transform.up * 0.1f;
 
     // -------------------------------------------------------------------------
@@ -84,7 +77,7 @@ public class Wheel : MonoBehaviour
     private void FixedUpdate()
     {
         _isGrounded = Physics.Raycast(
-            transform.position + _groundedRaycastPadding, // avoid raycasting below the ground when the wheel is right on the surface
+            transform.position + _groundedRaycastPadding,
             -transform.up,
             _groundCheckDistance,
             _groundMask
@@ -98,8 +91,6 @@ public class Wheel : MonoBehaviour
 
             if (_isBraking)
                 ApplyBraking();
-            else
-                ApplyAcceleration();
         }
 
         RollTireVisual();
@@ -120,19 +111,6 @@ public class Wheel : MonoBehaviour
         float desiredAccel = desiredVelChange / Time.fixedDeltaTime;
 
         _rb.AddForceAtPosition(steeringDir * desiredAccel * _frictionStrength, transform.position);
-    }
-
-    /// <summary>Drives the wheel forward, torque falling off near <see cref="TopSpeed"/>.</summary>
-    private void ApplyAcceleration()
-    {
-        if (AccelInput <= 0f || _power <= 0f) return;
-
-        Vector3 accelDir = transform.forward;
-        float carSpeed = Vector3.Dot(_rb.transform.forward, _rb.linearVelocity);
-        float normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / TopSpeed);
-        float availableTorque = _power * AccelInput * (1f - normalizedSpeed);
-
-        _rb.AddForceAtPosition(accelDir * availableTorque, transform.position, ForceMode.Force);
     }
 
     /// <summary>Applies a force opposing the current forward velocity.</summary>
