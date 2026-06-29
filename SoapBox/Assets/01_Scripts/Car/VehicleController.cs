@@ -1,19 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/// <summary>
-/// Top-level vehicle controller for a soapbox racer.
-/// The vehicle has no engine — it is driven purely by gravity.
-///
-/// Who this script knows about : <see cref="Wheel"/> (public API only).
-///   - It NEVER reads Wheel's serialized values (grip, braking power, etc.).
-///   - It NEVER references Suspension at all.
-///   - Wheel registration is done via plain arrays in the inspector.
-///
-/// Input is driven by the generated <see cref="InputActions"/> C# class.
-/// Subscribe/unsubscribe is handled via OnEnable/OnDisable so the action map
-/// is active only while this component is enabled.
-/// </summary>
 public class VehicleController : MonoBehaviour
 {
     // -------------------------------------------------------------------------
@@ -35,6 +22,11 @@ public class VehicleController : MonoBehaviour
     [Tooltip("Hard maximum speed (m/s). The Rigidbody's linear velocity is clamped to this every physics step.")]
     [SerializeField, Min(0f)] private float _maxSpeed = 30f;
 
+#if UNITY_EDITOR
+    [Header("Debug")]
+    [SerializeField] private float _debugAcceleration = 100f;
+#endif
+
     // -------------------------------------------------------------------------
     // Private — input state
     // -------------------------------------------------------------------------
@@ -48,6 +40,12 @@ public class VehicleController : MonoBehaviour
 
     private float _currentSteerAngle;
     private Quaternion[] _steeringNeutralRotations;
+
+    // -------------------------------------------------------------------------
+    // Private — steering
+    // -------------------------------------------------------------------------
+
+    private bool _debugAccelerating;
 
     // -------------------------------------------------------------------------
     // Private — physics
@@ -92,6 +90,11 @@ public class VehicleController : MonoBehaviour
 
         _actions.Vehicle.Brake.performed += OnBrake;
         _actions.Vehicle.Brake.canceled += OnBrake;
+
+        #if UNITY_EDITOR
+        _actions.Vehicle.DebugAcceleration.performed += OnDebugAcceleration;
+        _actions.Vehicle.DebugAcceleration.canceled += OnDebugAcceleration;
+        #endif
     }
 
     private void OnDisable()
@@ -110,6 +113,7 @@ public class VehicleController : MonoBehaviour
         ClampSpeed();
         HandleSteering();
         HandleBraking();
+        HandleDebugAcceleration();
     }
 
     // -------------------------------------------------------------------------
@@ -171,4 +175,17 @@ public class VehicleController : MonoBehaviour
             else wheel.StopBraking();
         }
     }
+
+#if UNITY_EDITOR
+    private void OnDebugAcceleration(InputAction.CallbackContext ctx)
+    {
+        _debugAccelerating = ctx.started || ctx.performed;
+    }
+
+    private void HandleDebugAcceleration()
+    {
+        if (_debugAccelerating) 
+            _rb.AddForce(transform.forward * _debugAcceleration * 10000f * Time.fixedDeltaTime);
+    }
+#endif
 }

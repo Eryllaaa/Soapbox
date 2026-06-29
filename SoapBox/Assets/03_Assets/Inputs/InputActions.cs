@@ -109,6 +109,15 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Debug Acceleration"",
+                    ""type"": ""Button"",
+                    ""id"": ""3a52bd3b-c5ef-4d68-a2aa-ecca2089174a"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -153,6 +162,28 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Brake"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1112f8b2-e1e0-4acc-b332-f6aaa1ce4c53"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Debug Acceleration"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""626bd719-f54e-44ab-ad20-692c9461237f"",
+                    ""path"": ""<Keyboard>/z"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Debug Acceleration"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -742,6 +773,7 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
         m_Vehicle = asset.FindActionMap("Vehicle", throwIfNotFound: true);
         m_Vehicle_Steer = m_Vehicle.FindAction("Steer", throwIfNotFound: true);
         m_Vehicle_Brake = m_Vehicle.FindAction("Brake", throwIfNotFound: true);
+        m_Vehicle_DebugAcceleration = m_Vehicle.FindAction("Debug Acceleration", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -837,6 +869,7 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
     private List<IVehicleActions> m_VehicleActionsCallbackInterfaces = new List<IVehicleActions>();
     private readonly InputAction m_Vehicle_Steer;
     private readonly InputAction m_Vehicle_Brake;
+    private readonly InputAction m_Vehicle_DebugAcceleration;
     /// <summary>
     /// Provides access to input actions defined in input action map "Vehicle".
     /// </summary>
@@ -856,6 +889,10 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Vehicle/Brake".
         /// </summary>
         public InputAction @Brake => m_Wrapper.m_Vehicle_Brake;
+        /// <summary>
+        /// Provides access to the underlying input action "Vehicle/DebugAcceleration".
+        /// </summary>
+        public InputAction @DebugAcceleration => m_Wrapper.m_Vehicle_DebugAcceleration;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -888,6 +925,9 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
             @Brake.started += instance.OnBrake;
             @Brake.performed += instance.OnBrake;
             @Brake.canceled += instance.OnBrake;
+            @DebugAcceleration.started += instance.OnDebugAcceleration;
+            @DebugAcceleration.performed += instance.OnDebugAcceleration;
+            @DebugAcceleration.canceled += instance.OnDebugAcceleration;
         }
 
         /// <summary>
@@ -905,6 +945,9 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
             @Brake.started -= instance.OnBrake;
             @Brake.performed -= instance.OnBrake;
             @Brake.canceled -= instance.OnBrake;
+            @DebugAcceleration.started -= instance.OnDebugAcceleration;
+            @DebugAcceleration.performed -= instance.OnDebugAcceleration;
+            @DebugAcceleration.canceled -= instance.OnDebugAcceleration;
         }
 
         /// <summary>
@@ -1219,6 +1262,13 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnBrake(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Debug Acceleration" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnDebugAcceleration(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.
