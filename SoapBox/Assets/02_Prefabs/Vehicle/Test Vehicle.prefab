@@ -73,6 +73,7 @@ MonoBehaviour:
   _airYawTorque: 1000
   _airControlDeadZone: 0.05
   _maxSpeed: 50
+  _debugAcceleration: 100
 --- !u!54 &7132799404628376847
 Rigidbody:
   m_ObjectHideFlags: 0

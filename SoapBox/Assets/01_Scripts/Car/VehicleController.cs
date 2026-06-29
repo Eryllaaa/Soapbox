@@ -32,6 +32,11 @@ public class VehicleController : NetworkBehaviour
     [Header("Speed Limit")]
     [SerializeField, Min(0f)] private float _maxSpeed = 30f;
 
+#if UNITY_EDITOR
+    [Header("Debug")]
+    [SerializeField] private float _debugAcceleration = 100f;
+#endif
+
     // -------------------------------------------------------------------------
     // Private — input state
     // -------------------------------------------------------------------------
@@ -47,6 +52,7 @@ public class VehicleController : NetworkBehaviour
 
     private float _currentSteerAngle;
     private Quaternion[] _steeringNeutralRotations;
+    private bool _debugAccelerating;
     private Rigidbody _rb;
     private InputActions _actions;
 
@@ -111,6 +117,11 @@ public class VehicleController : NetworkBehaviour
 
         _actions.Vehicle.Yaw.performed += OnYaw;
         _actions.Vehicle.Yaw.canceled += OnYaw;
+
+#if UNITY_EDITOR
+        _actions.Vehicle.DebugAcceleration.performed += OnDebugAcceleration;
+        _actions.Vehicle.DebugAcceleration.canceled += OnDebugAcceleration;
+#endif
     }
 
     private void DisableLocalInput()
@@ -128,6 +139,11 @@ public class VehicleController : NetworkBehaviour
 
         _actions.Vehicle.Yaw.performed -= OnYaw;
         _actions.Vehicle.Yaw.canceled -= OnYaw;
+
+#if UNITY_EDITOR
+        _actions.Vehicle.DebugAcceleration.performed -= OnDebugAcceleration;
+        _actions.Vehicle.DebugAcceleration.canceled -= OnDebugAcceleration;
+#endif
 
         _actions.Disable();
     }
@@ -147,6 +163,7 @@ public class VehicleController : NetworkBehaviour
         HandleSteering();
         HandleBraking();
         HandleAirControl();
+        HandleDebugAcceleration();
     }
 
     // -------------------------------------------------------------------------
@@ -157,6 +174,13 @@ public class VehicleController : NetworkBehaviour
     private void OnBrake(InputAction.CallbackContext ctx) => _brakeInput = ctx.ReadValueAsButton();
     private void OnPitch(InputAction.CallbackContext ctx) => _pitchInput = ctx.ReadValue<float>();
     private void OnYaw(InputAction.CallbackContext ctx) => _yawInput = ctx.ReadValue<float>();
+
+#if UNITY_EDITOR
+    private void OnDebugAcceleration(InputAction.CallbackContext ctx)
+    {
+        _debugAccelerating = ctx.started || ctx.performed;
+    }
+#endif
 
     // -------------------------------------------------------------------------
     // Private physics helpers
@@ -221,6 +245,15 @@ public class VehicleController : NetworkBehaviour
 
         return false;
     }
+
+#if UNITY_EDITOR
+    private void HandleDebugAcceleration()
+    {
+        if (_rb == null) return;
+        if (_debugAccelerating)
+            _rb.AddForce(transform.forward * _debugAcceleration * 10000f * Time.fixedDeltaTime);
+    }
+#endif
 
     // -------------------------------------------------------------------------
     // Private network helpers
