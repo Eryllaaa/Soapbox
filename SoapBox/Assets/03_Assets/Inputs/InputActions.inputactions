@@ -23,15 +23,6 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
-                },
-                {
-                    "name": "Accelerate",
-                    "type": "Button",
-                    "id": "91d4f3ab-7b09-49c8-9389-1058eb88a9de",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -76,17 +67,6 @@
                     "processors": "",
                     "groups": "",
                     "action": "Brake",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "689dd566-1dba-4043-8c54-05a70d497809",
-                    "path": "<Keyboard>/w",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Accelerate",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

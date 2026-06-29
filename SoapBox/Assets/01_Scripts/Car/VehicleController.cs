@@ -2,14 +2,15 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// Top-level vehicle controller.
+/// Top-level vehicle controller for a soapbox racer.
+/// The vehicle has no engine — it is driven purely by gravity.
 ///
 /// Who this script knows about : <see cref="Wheel"/> (public API only).
-///   - It NEVER reads Wheel's serialized values (grip, power, etc.).
+///   - It NEVER reads Wheel's serialized values (grip, braking power, etc.).
 ///   - It NEVER references Suspension at all.
 ///   - Wheel registration is done via plain arrays in the inspector.
 ///
-/// Input is driven by the generated <see cref="InputsActions"/> C# class.
+/// Input is driven by the generated <see cref="InputActions"/> C# class.
 /// Subscribe/unsubscribe is handled via OnEnable/OnDisable so the action map
 /// is active only while this component is enabled.
 /// </summary>
@@ -23,25 +24,22 @@ public class VehicleController : MonoBehaviour
     [Tooltip("Wheels that will receive steering rotation.")]
     [SerializeField] private Wheel[] _steeringWheels;
 
-    [Tooltip("Wheels that will receive acceleration commands.")]
-    [SerializeField] private Wheel[] _driveWheels;
-
-    [Tooltip("Wheels that will receive braking commands (can overlap with drive/steering).")]
+    [Tooltip("Wheels that will receive braking commands.")]
     [SerializeField] private Wheel[] _brakeWheels;
 
     [Header("Steering")]
     [SerializeField] private float _maxSteerAngle = 30f;
     [SerializeField] private float _steerSpeed = 5f;
 
-    [Header("Acceleration")]
-    [SerializeField] private float _topSpeed = 30f;
+    [Header("Speed Limit")]
+    [Tooltip("Hard maximum speed (m/s). The Rigidbody's linear velocity is clamped to this every physics step.")]
+    [SerializeField, Min(0f)] private float _maxSpeed = 30f;
 
     // -------------------------------------------------------------------------
     // Private — input state
     // -------------------------------------------------------------------------
 
     private float _steerInput;
-    private float _throttleInput;
     private bool _brakeInput;
 
     // -------------------------------------------------------------------------
@@ -50,6 +48,12 @@ public class VehicleController : MonoBehaviour
 
     private float _currentSteerAngle;
     private Quaternion[] _steeringNeutralRotations;
+
+    // -------------------------------------------------------------------------
+    // Private — physics
+    // -------------------------------------------------------------------------
+
+    private Rigidbody _rb;
 
     // -------------------------------------------------------------------------
     // Private — input actions
@@ -63,6 +67,11 @@ public class VehicleController : MonoBehaviour
 
     private void Awake()
     {
+        _rb = GetComponent<Rigidbody>();
+
+        if (_rb == null)
+            Debug.LogError("[VehicleController] No Rigidbody found on this GameObject.", this);
+
         // Snapshot neutral rotations before anything moves.
         _steeringNeutralRotations = new Quaternion[_steeringWheels.Length];
         for (int i = 0; i < _steeringWheels.Length; i++)
@@ -74,22 +83,12 @@ public class VehicleController : MonoBehaviour
         _actions = new InputActions();
     }
 
-    private void Start()
-    {
-        foreach (Wheel wheel in _driveWheels)
-            if (wheel != null)
-                wheel.TopSpeed = _topSpeed;
-    }
-
     private void OnEnable()
     {
         _actions.Enable();
 
         _actions.Vehicle.Steer.performed += OnSteer;
         _actions.Vehicle.Steer.canceled += OnSteer;
-
-        _actions.Vehicle.Accelerate.performed += OnAccelerate;
-        _actions.Vehicle.Accelerate.canceled += OnAccelerate;
 
         _actions.Vehicle.Brake.performed += OnBrake;
         _actions.Vehicle.Brake.canceled += OnBrake;
@@ -100,9 +99,6 @@ public class VehicleController : MonoBehaviour
         _actions.Vehicle.Steer.performed -= OnSteer;
         _actions.Vehicle.Steer.canceled -= OnSteer;
 
-        _actions.Vehicle.Accelerate.performed -= OnAccelerate;
-        _actions.Vehicle.Accelerate.canceled -= OnAccelerate;
-
         _actions.Vehicle.Brake.performed -= OnBrake;
         _actions.Vehicle.Brake.canceled -= OnBrake;
 
@@ -111,8 +107,8 @@ public class VehicleController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        ClampSpeed();
         HandleSteering();
-        HandleAcceleration();
         HandleBraking();
     }
 
@@ -123,15 +119,24 @@ public class VehicleController : MonoBehaviour
     private void OnSteer(InputAction.CallbackContext ctx)
         => _steerInput = ctx.ReadValue<float>();
 
-    private void OnAccelerate(InputAction.CallbackContext ctx)
-        => _throttleInput = ctx.ReadValue<float>();
-
     private void OnBrake(InputAction.CallbackContext ctx)
         => _brakeInput = ctx.ReadValueAsButton();
 
     // -------------------------------------------------------------------------
     // Private physics helpers
     // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Clamps the Rigidbody's linear velocity so it never exceeds <see cref="_maxSpeed"/>.
+    /// This is applied directly to the velocity vector, preserving direction.
+    /// </summary>
+    private void ClampSpeed()
+    {
+        if (_rb == null) return;
+
+        if (_rb.linearVelocity.magnitude > _maxSpeed)
+            _rb.linearVelocity = _rb.linearVelocity.normalized * _maxSpeed;
+    }
 
     /// <summary>
     /// Smoothly rotates each steering wheel around its own local Y axis,
@@ -152,16 +157,6 @@ public class VehicleController : MonoBehaviour
 
             _steeringWheels[i].transform.localRotation =
                 _steeringNeutralRotations[i] * Quaternion.Euler(0f, _currentSteerAngle, 0f);
-        }
-    }
-
-    /// <summary>Passes the throttle value to every drive wheel.</summary>
-    private void HandleAcceleration()
-    {
-        foreach (Wheel wheel in _driveWheels)
-        {
-            if (wheel != null)
-                wheel.AccelInput = _throttleInput;
         }
     }
 
