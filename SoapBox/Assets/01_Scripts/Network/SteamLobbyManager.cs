@@ -33,11 +33,15 @@ namespace Soapbox.Networking
         }
 
         // ========================================================================
-        // 1. APPELÉ PAR TON BOUTON UI "HOST" (ou intercepté par le NetworkManager)
+        // 1. APPELÉ PAR VOTRE BOUTON UI "HOST STEAM"
         // ========================================================================
         public void HostLobby()
         {
-            if (!SteamManager.Initialized) return;
+            if (!SteamManager.Initialized)
+            {
+                Debug.LogWarning("[SteamLobbyManager] Impossible d'héberger : Steam n'est pas initialisé.");
+                return;
+            }
 
             Debug.Log("[SteamLobbyManager] Création du lobby Steam en cours...");
             // Crée un lobby "Amis Uniquement" avec le nombre max de joueurs défini dans le NetworkManager
@@ -61,15 +65,8 @@ namespace Soapbox.Networking
             CSteamID lobbyId = new CSteamID(callback.m_ulSteamIDLobby);
             SteamMatchmaking.SetLobbyData(lobbyId, HostAddressKey, SteamUser.GetSteamID().ToString());
 
-            // On lance le vrai Host Mirror via le bypass pour éviter la boucle infinie
-            if (_networkManager is SoapboxNetworkManager soapboxNM)
-            {
-                soapboxNM.StartHostBypass();
-            }
-            else
-            {
-                _networkManager.StartHost();
-            }
+            // On lance directement le Host standard de Mirror
+            _networkManager.StartHost();
         }
 
         // ========================================================================

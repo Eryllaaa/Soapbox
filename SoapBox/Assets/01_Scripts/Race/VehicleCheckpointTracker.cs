@@ -1,5 +1,6 @@
 using Mirror;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Soapbox.Race
 {
@@ -15,7 +16,12 @@ namespace Soapbox.Race
             // Seul le joueur local peut déclencher son propre respawn
             if (!isLocalPlayer) return;
 
-            if (Input.GetKeyDown(KeyCode.R))
+            if (Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
+            {
+                CmdRequestRespawn();
+            }
+
+            if (Gamepad.current != null && Gamepad.current.selectButton.wasPressedThisFrame)
             {
                 CmdRequestRespawn();
             }
@@ -63,8 +69,7 @@ namespace Soapbox.Race
                 }
             }
 
-            // Si aucun checkpoint n'a encore été franchi (LastCheckpoint == -1), 
-            // on cherche à le replacer sur le checkpoint de départ (Index 0)
+            // Si aucun checkpoint n'a encore été franchi, on cherche le départ (Index 0)
             if (targetCheckpoint == null)
             {
                 foreach (var cp in checkpoints)
@@ -77,9 +82,13 @@ namespace Soapbox.Race
                 }
             }
 
-            // Si un checkpoint de destination valide est trouvé, on déclenche le TargetRpc
+            // Si un checkpoint de destination valide est trouvé
             if (targetCheckpoint != null)
             {
+                // On téléporte le véhicule sur le SERVEUR
+                TeleportAndReset(targetCheckpoint.transform.position, targetCheckpoint.transform.rotation);
+
+                // On ordonne au client de faire de même
                 TargetRespawn(targetCheckpoint.transform.position, targetCheckpoint.transform.rotation);
             }
         }
@@ -93,18 +102,70 @@ namespace Soapbox.Race
             RacePosition = 1;
         }
 
-        // NOUVEAU : Appel ciblé du serveur vers le client propriétaire pour se téléporter
+        // Appel ciblé du serveur vers le client propriétaire pour se téléporter
         [TargetRpc]
         public void TargetRespawn(Vector3 position, Quaternion rotation)
         {
-            transform.position = position;
-            transform.rotation = rotation;
+            TeleportAndReset(position, rotation);
+        }
 
-            // On stoppe totalement la voiture (pour éviter qu'elle continue de rouler / voler)
+        /// <summary>
+        /// Méthode robuste pour téléporter un véhicule physique sans conflit avec Unity ni Mirror.
+        /// </summary>
+        private void TeleportAndReset(Vector3 position, Quaternion rotation)
+        {
+            // Étape 1 : Gérer la physique Unity et l'interpolation du Rigidbody
             if (TryGetComponent(out Rigidbody rb))
             {
+                // On désactive temporairement l'interpolation pour éviter le bug de gel en l'air de Unity
+                RigidbodyInterpolation tempInterpolation = rb.interpolation;
+                rb.interpolation = RigidbodyInterpolation.None;
+
+                // On stoppe toutes les forces accumulées
                 rb.linearVelocity = Vector3.zero;
                 rb.angularVelocity = Vector3.zero;
+                
+                // On déplace le Rigidbody physiquement et visuellement
+                rb.position = position;
+                rb.rotation = rotation;
+                transform.position = position;
+                transform.rotation = rotation;
+
+                // On remet l'interpolation d'origine
+                rb.interpolation = tempInterpolation;
+            }
+            else
+            {
+                transform.position = position;
+                transform.rotation = rotation;
+            }
+
+            // Étape 2 : Forcer la mise à jour immédiate de la physique pour éviter les décalages de colliders
+            Physics.SyncTransforms();
+
+            // Étape 3 : Réinitialiser la mémoire tampon d'interpolation de Mirror (Snapshot Buffer)
+            // Pour éviter les erreurs de compilation dues aux fichiers d'Assembly Definition (.asmdef), 
+            // on accède à la méthode OnTeleport de NetworkTransform par Réflexion.
+            Component nt = GetComponent("NetworkTransform");
+            if (nt != null)
+            {
+                System.Type type = nt.GetType();
+                
+                // On cherche d'abord la méthode OnTeleport(Vector3, Quaternion)
+                var methodWithRot = type.GetMethod("OnTeleport", new System.Type[] { typeof(Vector3), typeof(Quaternion) });
+                if (methodWithRot != null)
+                {
+                    methodWithRot.Invoke(nt, new object[] { position, rotation });
+                }
+                else
+                {
+                    // Si indisponible, on cherche OnTeleport(Vector3)
+                    var methodNoRot = type.GetMethod("OnTeleport", new System.Type[] { typeof(Vector3) });
+                    if (methodNoRot != null)
+                    {
+                        methodNoRot.Invoke(nt, new object[] { position });
+                    }
+                }
             }
         }
     }

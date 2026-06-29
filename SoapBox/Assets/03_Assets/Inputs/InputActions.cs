@@ -127,6 +127,15 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Respawn"",
+                    ""type"": ""Button"",
+                    ""id"": ""99bcc31b-42c6-4410-94ea-0a0830db2f09"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -239,6 +248,17 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
                     ""action"": ""Yaw"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9a5b8325-862a-4f71-8b73-314cf2e799ae"",
+                    ""path"": ""<Keyboard>/r"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Respawn"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -828,6 +848,7 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
         m_Vehicle_Brake = m_Vehicle.FindAction("Brake", throwIfNotFound: true);
         m_Vehicle_Pitch = m_Vehicle.FindAction("Pitch", throwIfNotFound: true);
         m_Vehicle_Yaw = m_Vehicle.FindAction("Yaw", throwIfNotFound: true);
+        m_Vehicle_Respawn = m_Vehicle.FindAction("Respawn", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -925,6 +946,7 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Vehicle_Brake;
     private readonly InputAction m_Vehicle_Pitch;
     private readonly InputAction m_Vehicle_Yaw;
+    private readonly InputAction m_Vehicle_Respawn;
     /// <summary>
     /// Provides access to input actions defined in input action map "Vehicle".
     /// </summary>
@@ -952,6 +974,10 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Vehicle/Yaw".
         /// </summary>
         public InputAction @Yaw => m_Wrapper.m_Vehicle_Yaw;
+        /// <summary>
+        /// Provides access to the underlying input action "Vehicle/Respawn".
+        /// </summary>
+        public InputAction @Respawn => m_Wrapper.m_Vehicle_Respawn;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -990,6 +1016,9 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
             @Yaw.started += instance.OnYaw;
             @Yaw.performed += instance.OnYaw;
             @Yaw.canceled += instance.OnYaw;
+            @Respawn.started += instance.OnRespawn;
+            @Respawn.performed += instance.OnRespawn;
+            @Respawn.canceled += instance.OnRespawn;
         }
 
         /// <summary>
@@ -1013,6 +1042,9 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
             @Yaw.started -= instance.OnYaw;
             @Yaw.performed -= instance.OnYaw;
             @Yaw.canceled -= instance.OnYaw;
+            @Respawn.started -= instance.OnRespawn;
+            @Respawn.performed -= instance.OnRespawn;
+            @Respawn.canceled -= instance.OnRespawn;
         }
 
         /// <summary>
@@ -1341,6 +1373,13 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnYaw(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Respawn" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnRespawn(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

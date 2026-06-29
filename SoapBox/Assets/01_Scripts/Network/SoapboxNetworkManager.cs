@@ -43,40 +43,6 @@ namespace Soapbox.Networking
             if (_autoReleaseSpawnsOnStartServer) SoapboxSpawnPoint.ReleaseAll();
         }
 
-        // =========================================================================
-        // STEAM INTERCEPTION (Pour le HUD par défaut de Mirror)
-        // =========================================================================
-
-        /// <summary>
-        /// Masque le StartHost d'origine (Mirror l'ayant rendu non-virtuel dans ses versions récentes).
-        /// On intercepte l'appel pour créer le lobby Steam en premier.
-        /// </summary>
-        public new void StartHost()
-        {
-            SteamLobbyManager steamLobby = GetComponent<SteamLobbyManager>();
-            
-            // Si Steam est là, on lui demande de créer le lobby d'abord
-            if (steamLobby != null && SteamManager.Initialized)
-            {
-                Debug.Log("[SoapboxNetworkManager] Interception de StartHost pour créer le Lobby Steam...");
-                steamLobby.HostLobby();
-            }
-            else
-            {
-                // Si Steam n'est pas lancé, on lance normalement via base.StartHost()
-                base.StartHost();
-            }
-        }
-
-        /// <summary>
-        /// Appelé par le SteamLobbyManager UNE FOIS que le lobby Steam est bel et bien créé.
-        /// Évite de rappeler StartHost() en boucle.
-        /// </summary>
-        public void StartHostBypass()
-        {
-            base.StartHost();
-        }
-
         // -------------------------------------------------------------------------
         // Spawn — server side
         // -------------------------------------------------------------------------
