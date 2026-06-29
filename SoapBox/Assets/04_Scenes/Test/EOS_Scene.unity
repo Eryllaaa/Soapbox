@@ -489,7 +489,6 @@ MonoBehaviour:
   _grip: 0.8
   _gripWhenBraking: 0.4
   _frictionStrength: 10
-  _power: 1000
   _brakingPower: 1000
   _groundCheckDistance: 0.5
   _groundMask:
@@ -634,7 +633,6 @@ MonoBehaviour:
   _grip: 0.8
   _gripWhenBraking: 0.4
   _frictionStrength: 10
-  _power: 1000
   _brakingPower: 1000
   _groundCheckDistance: 0.5
   _groundMask:
@@ -721,7 +719,6 @@ MonoBehaviour:
   _grip: 0.8
   _gripWhenBraking: 0.4
   _frictionStrength: 10
-  _power: 1000
   _brakingPower: 1000
   _groundCheckDistance: 0.5
   _groundMask:
@@ -956,7 +953,6 @@ MonoBehaviour:
   _grip: 0.8
   _gripWhenBraking: 0.4
   _frictionStrength: 12
-  _power: 1000
   _brakingPower: 1000
   _groundCheckDistance: 0.5
   _groundMask:
@@ -1334,6 +1330,55 @@ Transform:
   m_Children:
   - {fileID: 396999942}
   m_Father: {fileID: 269609932}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1157765642
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1157765644}
+  - component: {fileID: 1157765643}
+  m_Layer: 0
+  m_Name: Global Volume
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1157765643
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1157765642}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
+  m_IsGlobal: 1
+  priority: 0
+  blendDistance: 0
+  weight: 1
+  sharedProfile: {fileID: 11400000, guid: 10fc4df2da32a41aaa32d77bc913491c, type: 2}
+--- !u!4 &1157765644
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1157765642}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -21.586462, y: 24.545101, z: 2.5698247}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1277200856
 GameObject:
@@ -3020,15 +3065,12 @@ MonoBehaviour:
   _steeringWheels:
   - {fileID: 423884215}
   - {fileID: 386749369}
-  _driveWheels:
-  - {fileID: 184814613}
-  - {fileID: 269609931}
   _brakeWheels:
   - {fileID: 423884215}
   - {fileID: 386749369}
   _maxSteerAngle: 20
   _steerSpeed: 3
-  _topSpeed: 30
+  _maxSpeed: 30
 --- !u!4 &2103810485
 Transform:
   m_ObjectHideFlags: 0
@@ -3183,3 +3225,4 @@ SceneRoots:
   - {fileID: 136693580}
   - {fileID: 2090360727}
   - {fileID: 1315962723}
+  - {fileID: 1157765644}
