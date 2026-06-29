@@ -31,10 +31,17 @@ public class SplineFollowCamera : MonoBehaviour
     public int globalResolution = 6;
     public int globalIterations = 3;
 
+    [Header("Anti-jump (corner cutting)")]
+    [Tooltip("The tracked point may move at most this multiple of the player's own motion per frame. " +
+             "Kills the nearest-point flip on the inside of curves. 1 = exactly the player's speed.")]
+    public float maxStepMultiplier = 1.5f;
+
     Vector3 _posVelocity;
     float _currentT;
     bool _hasT;
     bool _init;
+    Vector3 _lastPlayerPos;
+    float _splineLength = -1f;
 
     void LateUpdate()
     {
@@ -42,6 +49,9 @@ public class SplineFollowCamera : MonoBehaviour
 
         var spline = roadSpline.Spline;
         float3 localPlayer = roadSpline.transform.InverseTransformPoint(player.position);
+
+        if (_splineLength <= 0f)
+            _splineLength = SplineUtility.CalculateLength(spline, roadSpline.transform.localToWorldMatrix);
 
         float t;
         if (!_hasT)
@@ -56,6 +66,14 @@ public class SplineFollowCamera : MonoBehaviour
             // only search around last frame's t -> can't jump across the track
             t = FindLocalT(spline, localPlayer, _currentT);
 
+            // On the inside of a curve the nearest point on the spline is unstable:
+            // a small drift of the player flips it far along the track. Cap how far the
+            // tracked point may travel this frame to the player's own motion, so the
+            // camera can't get flung to a far position.
+            float playerStep = (player.position - _lastPlayerPos).magnitude;
+            float maxDeltaT = (playerStep * maxStepMultiplier) / Mathf.Max(_splineLength, 0.0001f);
+            t = MoveTowardsT(_currentT, t, maxDeltaT, spline.Closed);
+
             // safety net: car teleported (respawn?) -> re-lock globally
             Vector3 nearWorld = roadSpline.EvaluatePosition(t);
             if ((nearWorld - player.position).sqrMagnitude > reacquireDistance * reacquireDistance)
@@ -63,6 +81,7 @@ public class SplineFollowCamera : MonoBehaviour
                     globalResolution, globalIterations);
         }
         _currentT = t;
+        _lastPlayerPos = player.position;
 
         Vector3 roadPos = roadSpline.EvaluatePosition(t);
         Vector3 tangent = ((Vector3)roadSpline.EvaluateTangent(t));
@@ -125,6 +144,16 @@ public class SplineFollowCamera : MonoBehaviour
             win *= 0.5f;
         }
         return best;
+    }
+
+    // move t from -> to by at most maxDelta, taking the shortest way around on closed splines
+    static float MoveTowardsT(float from, float to, float maxDelta, bool closed)
+    {
+        if (maxDelta <= 0f) return from;
+        float diff = to - from;
+        if (closed) diff -= Mathf.Floor(diff + 0.5f); // wrap into [-0.5, 0.5]
+        if (Mathf.Abs(diff) <= maxDelta) return to;
+        return WrapT(from + Mathf.Sign(diff) * maxDelta, closed);
     }
 
     static float WrapT(float t, bool closed)
