@@ -59,6 +59,7 @@ MonoBehaviour:
   _maxSteerAngle: 10
   _steerSpeed: 3
   _maxSpeed: 30
+  _debugAcceleration: 100
 --- !u!54 &7132799404628376847
 Rigidbody:
   m_ObjectHideFlags: 0
