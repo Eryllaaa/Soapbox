@@ -12,7 +12,8 @@ GameObject:
   - component: {fileID: 6380864474668977216}
   - component: {fileID: 7132799404628376847}
   - component: {fileID: 3539996637392637338}
-  - component: {fileID: 5131683530808188084}
+  - component: {fileID: 5848697323975982890}
+  - component: {fileID: 3923951789570326875}
   m_Layer: 0
   m_Name: Test Vehicle
   m_TagString: Untagged
@@ -61,11 +62,17 @@ MonoBehaviour:
   _brakeWheels:
   - {fileID: 810004115177184596}
   - {fileID: 8854749637741717297}
+  _suspensions:
+  - {fileID: 815709517502124247}
+  - {fileID: 51624856747576327}
+  - {fileID: 4592089334338597550}
+  - {fileID: 5649120841539782859}
   _maxSteerAngle: 10
   _steerSpeed: 3
-  _maxSpeed: 30
-  _steerSendThreshold: 0.01
-  _treatAsLocalOwnerWhenOffline: 1
+  _airPitchTorque: 1000
+  _airYawTorque: 1000
+  _airControlDeadZone: 0.05
+  _maxSpeed: 50
 --- !u!54 &7132799404628376847
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -90,9 +97,9 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 3
 --- !u!114 &3539996637392637338
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -110,7 +117,7 @@ MonoBehaviour:
   serverOnly: 0
   visibility: 0
   hasSpawned: 0
---- !u!114 &5131683530808188084
+--- !u!114 &5848697323975982890
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -119,34 +126,48 @@ MonoBehaviour:
   m_GameObject: {fileID: 4209155601020221814}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d38927cdc6024b9682b5fe9778b9ef99, type: 3}
+  m_Script: {fileID: 11500000, guid: a553cb17010b2403e8523b558bffbc14, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Mirror.Components::Mirror.PredictedRigidbody
+  m_EditorClassIdentifier: Mirror.Components::Mirror.NetworkTransformUnreliable
+  syncDirection: 1
+  syncMode: 0
+  syncInterval: 0
+  target: {fileID: 7194128923028107043}
+  syncPosition: 1
+  syncRotation: 1
+  syncScale: 0
+  onlySyncOnChange: 1
+  compressRotation: 1
+  interpolatePosition: 1
+  interpolateRotation: 1
+  interpolateScale: 1
+  coordinateSpace: 0
+  timelineOffset: 1
+  showGizmos: 0
+  showOverlay: 0
+  overlayColor: {r: 0, g: 0, b: 0, a: 0.5}
+  bufferResetMultiplier: 3
+  useFixedUpdate: 0
+  positionSensitivity: 0.01
+  rotationSensitivity: 0.01
+  scaleSensitivity: 0.01
+--- !u!114 &3923951789570326875
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4209155601020221814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f093f4a29bc09f46baada44564e71b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Soapbox.Race.VehicleCheckpointTracker
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  predictedRigidbody: {fileID: 7132799404628376847}
-  mode: 0
-  motionSmoothingVelocityThreshold: 0.1
-  motionSmoothingAngularVelocityThreshold: 5
-  motionSmoothingTimeTolerance: 0.5
-  stateHistoryLimit: 32
-  recordInterval: 0.05
-  onlyRecordChanges: 1
-  compareLastFirst: 1
-  positionCorrectionThreshold: 0.1
-  rotationCorrectionThreshold: 5
-  oneFrameAhead: 1
-  snapThreshold: 2
-  showGhost: 1
-  ghostVelocityThreshold: 0.1
-  localGhostMaterial: {fileID: 2100000, guid: 411a48b4a197d4924bec3e3809bc9320, type: 2}
-  remoteGhostMaterial: {fileID: 2100000, guid: 04f0b2088c857414393bab3b80356776, type: 2}
-  checkGhostsEveryNthFrame: 4
-  positionInterpolationSpeed: 15
-  rotationInterpolationSpeed: 10
-  teleportDistanceMultiplier: 10
-  reduceSendsWhileIdle: 1
+  _enforceSequence: 1
+  _finishGateAtCheckpoint: -1
 --- !u!1 &6724011324111934602
 GameObject:
   m_ObjectHideFlags: 0
@@ -349,6 +370,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f39a17d1041a6424881d48856ea2c9a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Wheel
+--- !u!114 &5649120841539782859 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7177531765357480485, guid: 6f372bf5d83c5974cabeed49aec51da6, type: 3}
+  m_PrefabInstance: {fileID: 3314089010133664494}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5c4928e3ab018e478cc2c4d8e74a351, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Suspension
 --- !u!4 &9190586280033253997 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5941804690164349059, guid: 6f372bf5d83c5974cabeed49aec51da6, type: 3}
@@ -436,6 +468,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5941804690164349059, guid: 6f372bf5d83c5974cabeed49aec51da6, type: 3}
   m_PrefabInstance: {fileID: 6638824784399153291}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &4592089334338597550 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7177531765357480485, guid: 6f372bf5d83c5974cabeed49aec51da6, type: 3}
+  m_PrefabInstance: {fileID: 6638824784399153291}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5c4928e3ab018e478cc2c4d8e74a351, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Suspension
 --- !u!114 &8854749637741717297 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2793274201098067898, guid: 6f372bf5d83c5974cabeed49aec51da6, type: 3}
@@ -524,6 +567,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6f372bf5d83c5974cabeed49aec51da6, type: 3}
+--- !u!114 &51624856747576327 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7177531765357480485, guid: 6f372bf5d83c5974cabeed49aec51da6, type: 3}
+  m_PrefabInstance: {fileID: 7146332537192842786}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5c4928e3ab018e478cc2c4d8e74a351, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Suspension
 --- !u!4 &3555970645148630689 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5941804690164349059, guid: 6f372bf5d83c5974cabeed49aec51da6, type: 3}
@@ -605,6 +659,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6f372bf5d83c5974cabeed49aec51da6, type: 3}
+--- !u!114 &815709517502124247 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7177531765357480485, guid: 6f372bf5d83c5974cabeed49aec51da6, type: 3}
+  m_PrefabInstance: {fileID: 7550931731456039666}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5c4928e3ab018e478cc2c4d8e74a351, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Suspension
 --- !u!4 &4233325947938890353 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5941804690164349059, guid: 6f372bf5d83c5974cabeed49aec51da6, type: 3}

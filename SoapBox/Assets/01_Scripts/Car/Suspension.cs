@@ -12,15 +12,14 @@
 ///   Suspension will slide that transform up and down along the spring axis;
 ///   neither script holds a reference to the other component.
 ///
-/// Networking
-/// ──────────
-/// In a multiplayer session, only the instance that owns the simulation
-/// (host or the local client that has authority) should run this spring.
-/// <see cref="Soapbox.Networking.NetworkOwnershipGate"/> is invoked from
-/// Awake to disable this component on remote clones. In solo play the gate
-/// is a no-op.
+/// NOTE MULTIJOUEUR : aucune dépendance à Mirror. Activé/désactivé depuis
+/// VehicleController.OnStartClient. Contrairement à Wheel, ce script ne fait
+/// que du raycast géométrique + repositionnement d'un Transform enfant — il
+/// pourrait être laissé actif même sur les clients distants pour un meilleur
+/// rendu visuel (voir note de fin de fichier dans VehicleController), au prix
+/// d'un coût CPU (un raycast par roue par client par frame physique).
 ///
-/// Who this script knows about : nobody (only a plain Transform + the gate).
+/// Who this script knows about : nobody (only a plain Transform).
 /// </summary>
 public class Suspension : MonoBehaviour
 {
@@ -53,9 +52,6 @@ public class Suspension : MonoBehaviour
 
     private void Awake()
     {
-        // Multiplayer guard: disable on remote clones.
-        if (!Soapbox.Networking.NetworkOwnershipGate.KeepLocal(this)) return;
-
         _rb = GetComponentInParent<Rigidbody>();
 
         if (_rb == null)

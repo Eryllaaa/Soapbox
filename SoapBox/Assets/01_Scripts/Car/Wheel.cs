@@ -3,28 +3,25 @@
 /// <summary>
 /// Handles wheel-level physics for a gravity-driven soapbox racer:
 /// side friction (grip / cornering) and braking only.
-/// Acceleration has been removed - the vehicle is pushed solely by gravity.
+/// Acceleration has been removed — the vehicle is pushed solely by gravity.
 ///
 /// Setup
 /// ─────
 /// • Place this on its own GameObject (the "wheel pivot") that is a child of
 ///   the vehicle body.
 /// • The Suspension component lives on a *sibling* GameObject and will slide
-///   this transform's position along the spring axis - Wheel never references
+///   this transform's position along the spring axis — Wheel never references
 ///   Suspension.
 /// • The VehicleController (or any other system) drives this component through
-///   <see cref="Brake"/> and <see cref="StopBraking"/>.
+///   <see cref="Brake"/>, <see cref="StopBraking"/> and reads <see cref="IsGrounded"/>
+///   to decide whether airborne control applies.
 ///
-/// Networking
-/// ──────────
-/// In a multiplayer session, only the instance that owns the simulation
-/// (host or the local client that has authority) should run this physics.
-/// In a network-enabled scene, <see cref="Soapbox.Networking.NetworkOwnershipGate"/>
-/// is invoked from Awake to disable this component on remote clones.
-/// In solo / offline play (no NetworkIdentity in the parent hierarchy) the
-/// gate is a no-op and the wheel runs normally.
+/// NOTE MULTIJOUEUR : ce script n'a aucune dépendance à Mirror. Il est
+/// activé/désactivé depuis VehicleController.OnStartClient selon que le
+/// client local possède ou non ce véhicule. Tant qu'il est "enabled", il se
+/// comporte exactement comme en solo.
 ///
-/// Who this script knows about : nobody (only the ownership gate).
+/// Who this script knows about : nobody.
 /// </summary>
 public class Wheel : MonoBehaviour
 {
@@ -50,7 +47,7 @@ public class Wheel : MonoBehaviour
     [SerializeField] private Transform _tireVisual;
 
     // -------------------------------------------------------------------------
-    // Public API - driven by an external controller
+    // Public API — driven by an external controller
     // -------------------------------------------------------------------------
 
     /// <summary>Tell the wheel to apply braking force this physics step.</summary>
@@ -58,6 +55,14 @@ public class Wheel : MonoBehaviour
 
     /// <summary>Release the brakes.</summary>
     public void StopBraking() => _isBraking = false;
+
+    /// <summary>
+    /// True when this wheel's raycast hit the ground during the last
+    /// <c>FixedUpdate</c>. Exposed read-only so an external controller
+    /// (e.g. <see cref="VehicleController"/>) can aggregate a vehicle-wide
+    /// "any wheel grounded" check without coupling to Wheel internals.
+    /// </summary>
+    public bool IsGrounded => _isGrounded;
 
     // -------------------------------------------------------------------------
     // Private
@@ -76,10 +81,6 @@ public class Wheel : MonoBehaviour
 
     private void Awake()
     {
-        // Multiplayer guard: disable on remote clones so only the authority
-        // applies forces. In solo / no-NetworkIdentity scenes, this is a no-op.
-        if (!Soapbox.Networking.NetworkOwnershipGate.KeepLocal(this)) return;
-
         _rb = GetComponentInParent<Rigidbody>();
         _activeGrip = _grip;
 
