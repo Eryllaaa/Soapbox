@@ -2119,6 +2119,8 @@ GameObject:
   - component: {fileID: 1080952598}
   - component: {fileID: 1080952599}
   - component: {fileID: 1080952600}
+  - component: {fileID: 1080952602}
+  - component: {fileID: 1080952601}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -2146,7 +2148,7 @@ MonoBehaviour:
   offlineScene: Assets/04_Scenes/Test Scenes/Test Hill.unity
   onlineScene: Assets/04_Scenes/Test/JhiderScene.unity
   offlineSceneLoadDelay: 0
-  transport: {fileID: 1080952599}
+  transport: {fileID: 1080952601}
   networkAddress: localhost
   maxConnections: 100
   disconnectInactiveConnections: 0
@@ -2196,7 +2198,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1080952594}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e6e55fca1f4e4844593a3dd65a3ecb39, type: 3}
   m_Name: 
@@ -2260,6 +2262,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Mirror::Mirror.NetworkManagerHUD
   offsetX: 0
   offsetY: 0
+--- !u!114 &1080952601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1080952594}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 929e3234c7db540b899f00183fc2b1fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror.Transports::Mirror.MultiplexTransport
+  transports:
+  - {fileID: 1080952597}
+  - {fileID: 1080952599}
+--- !u!114 &1080952602
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1080952594}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6d1ee0528a4229479f4f1cb968e2fc8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Soapbox.Networking.SteamLobbyManager
 --- !u!1 &1101484669
 GameObject:
   m_ObjectHideFlags: 0

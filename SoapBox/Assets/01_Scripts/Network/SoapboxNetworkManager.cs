@@ -7,19 +7,7 @@ namespace Soapbox.Networking
 {
     /// <summary>
     /// Soapbox-specific NetworkManager.
-    ///
-    /// Inherits from Mirror's <see cref="NetworkManager"/> so we can override
-    /// the spawn and scene-change hooks directly.
-    ///
-    /// Responsibilities:
-    ///   • Spawn the local player's vehicle at a <see cref="SoapboxSpawnPoint"/>
-    ///     in the scene (round-robin, with optional single-use consumption).
-    ///   • Fall back to a circle-of-spawns layout when the scene has no markers.
-    ///   • Auto-attach the local <see cref="Soapbox.CameraSystem.CameraRig"/>
-    ///     (if present in the scene) to the freshly spawned vehicle on the
-    ///     local client only.
-    ///   • Auto-select <c>FizzySteamworks</c> as the transport if no transport
-    ///     has been assigned in the inspector.
+    /// Gère l'apparition des joueurs, l'attachement de la caméra et intègre Steam.
     /// </summary>
     public class SoapboxNetworkManager : NetworkManager
     {
@@ -53,6 +41,40 @@ namespace Soapbox.Networking
         {
             base.OnStartServer();
             if (_autoReleaseSpawnsOnStartServer) SoapboxSpawnPoint.ReleaseAll();
+        }
+
+        // =========================================================================
+        // STEAM INTERCEPTION (Pour le HUD par défaut de Mirror)
+        // =========================================================================
+
+        /// <summary>
+        /// Masque le StartHost d'origine (Mirror l'ayant rendu non-virtuel dans ses versions récentes).
+        /// On intercepte l'appel pour créer le lobby Steam en premier.
+        /// </summary>
+        public new void StartHost()
+        {
+            SteamLobbyManager steamLobby = GetComponent<SteamLobbyManager>();
+            
+            // Si Steam est là, on lui demande de créer le lobby d'abord
+            if (steamLobby != null && SteamManager.Initialized)
+            {
+                Debug.Log("[SoapboxNetworkManager] Interception de StartHost pour créer le Lobby Steam...");
+                steamLobby.HostLobby();
+            }
+            else
+            {
+                // Si Steam n'est pas lancé, on lance normalement via base.StartHost()
+                base.StartHost();
+            }
+        }
+
+        /// <summary>
+        /// Appelé par le SteamLobbyManager UNE FOIS que le lobby Steam est bel et bien créé.
+        /// Évite de rappeler StartHost() en boucle.
+        /// </summary>
+        public void StartHostBypass()
+        {
+            base.StartHost();
         }
 
         // -------------------------------------------------------------------------

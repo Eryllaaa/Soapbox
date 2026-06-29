@@ -10,6 +10,17 @@ namespace Soapbox.Race
         [SyncVar] public float FinishTime = 0f;
         [SyncVar] public int RacePosition = 1; 
 
+        private void Update()
+        {
+            // Seul le joueur local peut déclencher son propre respawn
+            if (!isLocalPlayer) return;
+
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                CmdRequestRespawn();
+            }
+        }
+
         private void OnTriggerEnter(Collider other)
         {
             if (!isLocalPlayer) return;
@@ -32,6 +43,44 @@ namespace Soapbox.Race
                 IsFinished = true;
                 FinishTime = RaceManager.Instance.GetElapsedTime();
                 RaceManager.Instance.PlayerFinishedRace(netId, FinishTime);
+            }
+        }
+
+        [Command]
+        private void CmdRequestRespawn()
+        {
+            // Recherche de tous les checkpoints de la scène
+            Checkpoint[] checkpoints = FindObjectsOfType<Checkpoint>();
+            Checkpoint targetCheckpoint = null;
+
+            // Recherche du checkpoint correspondant au dernier validé
+            foreach (var cp in checkpoints)
+            {
+                if (cp.Index == LastCheckpoint)
+                {
+                    targetCheckpoint = cp;
+                    break;
+                }
+            }
+
+            // Si aucun checkpoint n'a encore été franchi (LastCheckpoint == -1), 
+            // on cherche à le replacer sur le checkpoint de départ (Index 0)
+            if (targetCheckpoint == null)
+            {
+                foreach (var cp in checkpoints)
+                {
+                    if (cp.Index == 0)
+                    {
+                        targetCheckpoint = cp;
+                        break;
+                    }
+                }
+            }
+
+            // Si un checkpoint de destination valide est trouvé, on déclenche le TargetRpc
+            if (targetCheckpoint != null)
+            {
+                TargetRespawn(targetCheckpoint.transform.position, targetCheckpoint.transform.rotation);
             }
         }
 
