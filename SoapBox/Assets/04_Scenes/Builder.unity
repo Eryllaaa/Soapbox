@@ -623,6 +623,7 @@ MonoBehaviour:
   _minWheels: 4
   _requireChassis: 1
   _requireSeat: 1
+  _frontWheelsSteerOnly: 1
 --- !u!114 &331752004
 MonoBehaviour:
   m_ObjectHideFlags: 0
