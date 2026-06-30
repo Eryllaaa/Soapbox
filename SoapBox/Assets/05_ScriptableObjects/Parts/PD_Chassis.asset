@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edbb64afc47ad6f4f8a679ab5616e60e, type: 3}
+  m_Name: PD_Chassis
+  m_EditorClassIdentifier: Assembly-CSharp::Soapbox.Builder.Parts.PartData
+  _id: chassis_basic
+  _displayName: Basic Chassis
+  _description: Basic Chassis part.
+  _category: {fileID: 11400000, guid: a9e5ea835357dcd45a0742011dd8c137, type: 2}
+  _cost: 100
+  _weight: 40
+  _size: {x: 1.6, y: 0.4, z: 2.6}
+  _prefab: {fileID: 2399870569245556770, guid: 1a54b036afe17734e8dd07cd5a1fe634, type: 3}
+  _thumbnail: {fileID: 0}

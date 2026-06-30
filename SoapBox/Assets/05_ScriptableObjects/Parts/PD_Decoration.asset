@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edbb64afc47ad6f4f8a679ab5616e60e, type: 3}
+  m_Name: PD_Decoration
+  m_EditorClassIdentifier: Assembly-CSharp::Soapbox.Builder.Parts.PartData
+  _id: deco_cube
+  _displayName: Deco Cube
+  _description: Deco Cube part.
+  _category: {fileID: 11400000, guid: 71c4655013bd2d94c8ca002bacc625a8, type: 2}
+  _cost: 5
+  _weight: 1
+  _size: {x: 0.3, y: 0.3, z: 0.3}
+  _prefab: {fileID: 7404557895431593961, guid: 3f07bf0bc410bbd46ac56e8e08cc895a, type: 3}
+  _thumbnail: {fileID: 0}

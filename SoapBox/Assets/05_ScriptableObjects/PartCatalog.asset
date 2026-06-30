@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26f1db4a9cba1384590ccf52942554cc, type: 3}
+  m_Name: PartCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::Soapbox.Builder.SaveSystem.PartCatalog
+  _parts:
+  - {fileID: 11400000, guid: 939cc932a3bc639419ac0c9ea0f6f38b, type: 2}
+  - {fileID: 11400000, guid: 0c9964ff811db444193bbeb190196539, type: 2}
+  - {fileID: 11400000, guid: d7f9a20981747764d8b76a0dd9d3fa70, type: 2}
+  - {fileID: 11400000, guid: 7c35c2a6261558241bfcd592ea69ceaf, type: 2}
+  - {fileID: 11400000, guid: e1b898b9db05e4847b28e63fe676c393, type: 2}

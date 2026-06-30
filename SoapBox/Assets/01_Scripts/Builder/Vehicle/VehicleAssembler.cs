@@ -26,6 +26,10 @@ namespace Soapbox.Builder.Vehicle
         [SerializeField] private bool _requireChassis = true;
         [SerializeField] private bool _requireSeat = true;
 
+        [Header("Steering")]
+        [Tooltip("Restrict steering to the front wheels only (decided by local Z). A wheel must still have IsSteering on its WheelRoleProvider to be eligible. Turn off to honour every provider flag.")]
+        [SerializeField] private bool _frontWheelsSteerOnly = true;
+
         /// <summary>
         /// Assembles the vehicle for driving. Returns false (with a reason) if the build
         /// fails validation.
@@ -63,8 +67,9 @@ namespace Soapbox.Builder.Vehicle
 
         private void InitialiseController(VehicleRoot vehicle)
         {
-            var steering = new List<Wheel>();
             var brake = new List<Wheel>();
+            var steerCandidates = new List<Wheel>();
+            var steerLocalZ = new List<float>();
 
             IReadOnlyList<PartInstance> parts = vehicle.Parts;
             for (int i = 0; i < parts.Count; i++)
@@ -80,15 +85,48 @@ namespace Soapbox.Builder.Vehicle
                     Wheel wheel = providers[p].Wheel;
                     if (wheel == null) continue;
 
-                    if (providers[p].IsSteering) steering.Add(wheel);
                     if (providers[p].IsBrake) brake.Add(wheel);
+                    if (providers[p].IsSteering)
+                    {
+                        steerCandidates.Add(wheel);
+                        steerLocalZ.Add(vehicle.transform.InverseTransformPoint(wheel.transform.position).z);
+                    }
                 }
             }
+
+            List<Wheel> steering = SelectSteeringWheels(steerCandidates, steerLocalZ);
 
             VehicleController controller = vehicle.GetComponent<VehicleController>();
             if (controller == null) controller = vehicle.gameObject.AddComponent<VehicleController>();
 
             controller.Initialize(steering.ToArray(), brake.ToArray());
+        }
+
+        /// <summary>
+        /// Restricts steering to the front half of the vehicle (by local Z) so a build using
+        /// all-steering wheel prefabs still steers like a car. Honours every eligible wheel
+        /// when <see cref="_frontWheelsSteerOnly"/> is off or the wheels share a single axle.
+        /// </summary>
+        private List<Wheel> SelectSteeringWheels(List<Wheel> candidates, List<float> localZ)
+        {
+            if (!_frontWheelsSteerOnly || candidates.Count <= 1) return candidates;
+
+            float min = localZ[0], max = localZ[0];
+            for (int i = 1; i < localZ.Count; i++)
+            {
+                if (localZ[i] < min) min = localZ[i];
+                if (localZ[i] > max) max = localZ[i];
+            }
+
+            // Single axle (no front/rear spread): keep them all steering.
+            if (max - min < 0.1f) return candidates;
+
+            float mid = (min + max) * 0.5f;
+            var front = new List<Wheel>();
+            for (int i = 0; i < candidates.Count; i++)
+                if (localZ[i] > mid) front.Add(candidates[i]);
+
+            return front.Count > 0 ? front : candidates;
         }
     }
 }
