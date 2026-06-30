@@ -61,17 +61,20 @@ public class Wheel : MonoBehaviour
 
     private Vector3 _groundedRaycastPadding => transform.up * 0.1f;
 
+    /// <summary>
+    /// The owning Rigidbody, resolved lazily. Lazy resolution lets the modular builder
+    /// add the Rigidbody to the vehicle root and then enable this wheel afterwards
+    /// (Awake may have run while no Rigidbody existed yet).
+    /// </summary>
+    private Rigidbody Rb => _rb != null ? _rb : (_rb = GetComponentInParent<Rigidbody>());
+
     // -------------------------------------------------------------------------
     // Unity lifecycle
     // -------------------------------------------------------------------------
 
     private void Awake()
     {
-        _rb = GetComponentInParent<Rigidbody>();
         _activeGrip = _grip;
-
-        if (_rb == null)
-            Debug.LogError($"[Wheel] No Rigidbody found in parent hierarchy of '{name}'.", this);
     }
 
     private void FixedUpdate()
@@ -104,32 +107,32 @@ public class Wheel : MonoBehaviour
     private void ApplySideFriction()
     {
         Vector3 steeringDir = transform.right;
-        Vector3 tireWorldVel = _rb.GetPointVelocity(transform.position);
+        Vector3 tireWorldVel = Rb.GetPointVelocity(transform.position);
 
         float steeringVel = Vector3.Dot(steeringDir, tireWorldVel);
         float desiredVelChange = -steeringVel * _activeGrip;
         float desiredAccel = desiredVelChange / Time.fixedDeltaTime;
 
-        _rb.AddForceAtPosition(steeringDir * desiredAccel * _frictionStrength, transform.position);
+        Rb.AddForceAtPosition(steeringDir * desiredAccel * _frictionStrength, transform.position);
     }
 
     /// <summary>Applies a force opposing the current forward velocity.</summary>
     private void ApplyBraking()
     {
-        float brakingFactor = Vector3.Dot(transform.forward, _rb.linearVelocity);
+        float brakingFactor = Vector3.Dot(transform.forward, Rb.linearVelocity);
 
         if (Mathf.Abs(brakingFactor) < 0.01f) return;
 
         Vector3 brakeDir = -Mathf.Sign(brakingFactor) * transform.forward;
-        _rb.AddForceAtPosition(brakeDir * _brakingPower, transform.position);
+        Rb.AddForceAtPosition(brakeDir * _brakingPower, transform.position);
     }
 
     /// <summary>Spins the optional tire mesh based on the vehicle's forward speed.</summary>
     private void RollTireVisual()
     {
-        if (_tireVisual == null || _rb == null) return;
+        if (_tireVisual == null || Rb == null) return;
 
-        float forwardSpeed = Vector3.Dot(_rb.linearVelocity, transform.forward);
+        float forwardSpeed = Vector3.Dot(Rb.linearVelocity, transform.forward);
         float rollDeg = forwardSpeed * (180f / Mathf.PI) * Time.fixedDeltaTime;
 
         _tireVisual.localRotation *= Quaternion.Euler(rollDeg, 0f, 0f);

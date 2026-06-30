@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -28,33 +29,33 @@ public class VehicleController : MonoBehaviour
 #endif
 
     // -------------------------------------------------------------------------
-    // Private — input state
+    // Private ï¿½ input state
     // -------------------------------------------------------------------------
 
     private float _steerInput;
     private bool _brakeInput;
 
     // -------------------------------------------------------------------------
-    // Private — steering
+    // Private ï¿½ steering
     // -------------------------------------------------------------------------
 
     private float _currentSteerAngle;
     private Quaternion[] _steeringNeutralRotations;
 
     // -------------------------------------------------------------------------
-    // Private — steering
+    // Private ï¿½ steering
     // -------------------------------------------------------------------------
 
     private bool _debugAccelerating;
 
     // -------------------------------------------------------------------------
-    // Private — physics
+    // Private ï¿½ physics
     // -------------------------------------------------------------------------
 
     private Rigidbody _rb;
 
     // -------------------------------------------------------------------------
-    // Private — input actions
+    // Private ï¿½ input actions
     // -------------------------------------------------------------------------
 
     private InputActions _actions;
@@ -70,15 +71,38 @@ public class VehicleController : MonoBehaviour
         if (_rb == null)
             Debug.LogError("[VehicleController] No Rigidbody found on this GameObject.", this);
 
-        // Snapshot neutral rotations before anything moves.
+        // Null-guard the wheel arrays so the controller can also be added at runtime by
+        // the modular builder before its wheels are assigned via Initialize().
+        _steeringWheels ??= Array.Empty<Wheel>();
+        _brakeWheels ??= Array.Empty<Wheel>();
+
+        SnapshotNeutralRotations();
+
+        _actions = new InputActions();
+    }
+
+    /// <summary>
+    /// Assigns the steering and brake wheel sets at runtime and re-snapshots steering
+    /// neutral rotations. Used by the modular vehicle builder so a dynamically assembled
+    /// vehicle can be driven by this controller without manual inspector wiring.
+    /// Existing scene-authored vehicles continue to work unchanged via the serialized arrays.
+    /// </summary>
+    public void Initialize(Wheel[] steeringWheels, Wheel[] brakeWheels)
+    {
+        _steeringWheels = steeringWheels ?? Array.Empty<Wheel>();
+        _brakeWheels = brakeWheels ?? Array.Empty<Wheel>();
+        SnapshotNeutralRotations();
+    }
+
+    /// <summary>Records each steering wheel's current local rotation as its neutral pose.</summary>
+    private void SnapshotNeutralRotations()
+    {
         _steeringNeutralRotations = new Quaternion[_steeringWheels.Length];
         for (int i = 0; i < _steeringWheels.Length; i++)
         {
             if (_steeringWheels[i] != null)
                 _steeringNeutralRotations[i] = _steeringWheels[i].transform.localRotation;
         }
-
-        _actions = new InputActions();
     }
 
     private void OnEnable()

@@ -39,17 +39,18 @@ public class Suspension : MonoBehaviour
 
     private Rigidbody _rb;
 
+    /// <summary>
+    /// The owning Rigidbody, resolved lazily so the modular builder can add the
+    /// Rigidbody to the vehicle root and enable this suspension afterwards.
+    /// </summary>
+    private Rigidbody Rb => _rb != null ? _rb : (_rb = GetComponentInParent<Rigidbody>());
+
     // -------------------------------------------------------------------------
     // Unity lifecycle
     // -------------------------------------------------------------------------
 
     private void Awake()
     {
-        _rb = GetComponentInParent<Rigidbody>();
-
-        if (_rb == null)
-            Debug.LogError($"[Suspension] No Rigidbody found in parent hierarchy of '{name}'.", this);
-
         if (_wheelTransform == null)
             Debug.LogWarning($"[Suspension] '_wheelTransform' is not assigned on '{name}'. " +
                              "The spring will still apply force but nothing will be repositioned.", this);
@@ -79,13 +80,13 @@ public class Suspension : MonoBehaviour
     private void ApplySpring(RaycastHit hit)
     {
         Vector3 springDir = hit.normal;
-        Vector3 pointVelocity = _rb.GetPointVelocity(hit.point);
+        Vector3 pointVelocity = Rb.GetPointVelocity(hit.point);
 
         float offset = _restDistance - hit.distance;
         float velocity = Vector3.Dot(springDir, pointVelocity);
         float force = (offset * _springStrength * 100f) - (velocity * _springDamp * 100f);
 
-        _rb.AddForceAtPosition(springDir * force, transform.position);
+        Rb.AddForceAtPosition(springDir * force, transform.position);
     }
 
     /// <summary>
