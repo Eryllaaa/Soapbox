@@ -239,7 +239,7 @@ passer par `[Command]`.
    - Les tableaux `_steeringWheels` et `_brakeWheels` sont déjà câblés d'origine
    - Ajouter `VehicleCheckpointTracker` (à côté de `VehicleController`)
 
-2. **Scène de jeu** (par ex. `Test Hill.unity`) :
+2. **Scène de jeu** (par ex. `JhiderScene.unity`) :
    - Placer un `NetworkManager` (le projet en a un). Remplacer le script par `Soapbox.Networking.SoapboxNetworkManager` (subclass).
    - Assigner le prefab véhicule dans `Player Prefab` du `NetworkManager`.
    - Placer 1 à N `Soapbox.Networking.SoapboxSpawnPoint` (GameObject vide + composant) à chaque point de spawn souhaité.
@@ -254,6 +254,211 @@ passer par `[Command]`.
 4. **Steam** :
    - L'app ID Steam doit être configuré dans `FizzySteamworks` (transport sur le NetworkManager).
    - Chaque joueur doit avoir lancé Steam et le jeu pour que le transport fonctionne.
+
+---
+
+## Menu / Lobby (3-scene flow)
+
+### Concept
+
+Trois scènes distinctes, séparées par `NetworkManager.ServerChangeScene`
+(la seule façon correcte de changer de scène pendant une session Mirror active) :
+
+```
+[Scène Menu]  --HOST-->  [Scène Lobby]  --LANCER-->  [Scène Race = JhiderScene]
+       |
+       --Join via Steam overlay-->  (Mirror replicate) → [Scène Lobby]
+```
+
+- **Menu** : écran titre, 3 boutons (HOST / INVITER UN AMI / QUITTER).
+  HOST déclenche `SteamLobbyManager.HostLobby()` → `OnLobbyCreated` →
+  `StartHost()` + `ServerChangeScene("Lobby")`. INVITER UN AMI ouvre
+  l'overlay Steam (`SteamFriends.ActivateGameOverlayInviteDialog`) et n'est
+  actif que quand on est déjà dans un lobby (le bouton est `interactable = false`
+  sinon).
+- **Lobby** : liste des joueurs connectés (lecture de `NetworkServer.connections`
+  côté host, `NetworkClient.isConnected` côté guest), bouton **LANCER LA COURSE**
+  (host only) qui déclenche `ServerChangeScene("JhiderScene")`, bouton
+  **QUITTER LE LOBBY** qui appelle `SceneFlow.LoadMenuAfterShutdown()` (stoppe
+  Mirror, puis `SceneManager.LoadScene("Menu")` local).
+- **Race** : `JhiderScene.unity` (déjà câblée avec checkpoints, race manager).
+
+### Architecture
+
+```
+Assets/01_Scripts/Menu/
+├── MenuController.cs              ← Orchestrateur Menu (MonoBehaviour, 0 réseau)
+├── LobbyController.cs             ← Orchestrateur Lobby (Mirror-aware, polling)
+├── SceneFlow.cs                   ← Static facade : ServerChangeScene / Stop+Load
+├── MenuUIBuilder.cs               ← Auto-build Canvas Menu (dark grey, 0 prefab)
+├── LobbyUIBuilder.cs              ← Auto-build Canvas Lobby
+├── MenuInputAdapter.cs            ← Pont EventManager -> Steam/Mirror/Scene
+└── MenuInput.cs                   ← InputActionMap "Menu" (Submit/Cancel/Navigate)
+```
+
+### Event bus (EventManager — extension)
+
+Le hub statique existant (`OnRaceCountdownTick`, etc.) a été étendu — pas
+réécrit — avec deux sections :
+
+```csharp
+#region Menu System
+public static event Action OnHostRequested;
+public static event Action OnInviteFriendRequested;
+public static event Action OnQuitRequested;
+public static event Action OnReturnToMenuRequested;
+public static event Action OnStartRaceRequested;
+#endregion
+#region Lobby System
+public static event Action<int, int, string> OnLobbyRosterChanged;        // (cur, max, formatted)
+public static event Action<bool> OnSteamLobbyAvailabilityChanged;
+#endregion
+```
+
+### Séparation des responsabilités
+
+- **`MenuController` / `LobbyController`** : publient des intents via
+  `EventManager` mais ne touchent jamais Steam ni Mirror directement. Trivial
+  à tester, trivial à swap pour un autre backend.
+- **`MenuInputAdapter`** : seul fichier à connaître Steamworks / Mirror côté
+  menu. Traduit les events en appels concrets.
+- **`SceneFlow`** : static facade pour les transitions de scène. Centralise
+  la règle "ServerChangeScene pour le réseau, SceneManager.LoadScene après
+  shutdown pour le retour menu local".
+- **`MenuUIBuilder` / `LobbyUIBuilder`** : construction 100% par code, pas de
+  prefab à câbler. Si demain un designer veut un visuel custom, il remplace
+  l'auto-build par un prefab sans toucher au contrôleur.
+
+### Modifications minimales de l'existant
+
+- `EventManager.cs` : +25 lignes (events Menu/Lobby). Zéro suppression.
+- `SteamLobbyManager.cs` : +1 champ `CurrentLobbyId`, +1 méthode
+  `OnDisconnected()`, +3 lignes dans `OnLobbyCreated` / `OnLobbyEntered`
+  pour pinger la dispo du lobby. Zéro changement de comportement existant.
+- `SoapboxNetworkManager.cs` : +2 overrides (`OnClientDisconnect` /
+  `OnStopHost`) qui forwardent vers `SteamLobbyManager.OnDisconnected()`.
+  Pure plumbing, zéro changement de logique réseau.
+
+### Setup Editor pour les scènes Menu / Lobby
+
+Ces scènes doivent être créées dans l'éditeur Unity (les fichiers `.unity`
+ne se patchent proprement que par l'éditeur). Procédure **1 clic** via le
+script editor inclus, ou procédure manuelle pour plus de contrôle.
+
+#### Option A — 1 clic (recommandé)
+
+Menu Unity : **Tools → Soapbox → Setup Menu & Lobby (full)**
+
+Le script `Assets/01_Scripts/Menu/Editor/SoapboxSetup.cs` fait tout :
+
+1. Crée / remplace `Assets/04_Scenes/Menu.unity` et y instancie le prefab
+   `Assets/02_Prefabs/Manager/NetworkManager.prefab`. Ce prefab porte déjà
+   `SoapboxNetworkManager` (avec `dontDestroyOnLoad: 1`), `SteamLobbyManager`,
+   `MultiplexTransport` (Steam + KCP), `KcpTransport`, `FizzySteamworks`,
+   `SteamManager`, le `NetworkManagerHUD` Mirror legacy, et les bons
+   `offlineScene` / `onlineScene` (Menu / Lobby).
+2. Ajoute un GameObject `MenuController` séparé (avec `MenuUIBuilder` auto
+   via `[RequireComponent]`, plus `MenuInputAdapter`). Ce GameObject est
+   `DontDestroyOnLoad` au runtime (via `MenuController.Awake()`) — il survit
+   donc à la transition Menu → Lobby et permet au host de cliquer
+   **LANCER LA COURSE** depuis le Lobby.
+3. Appelle `MenuUIBuilder.Build()` pour générer le Canvas + boutons, et
+   sauvegarde la scène (le Canvas devient un GameObject normal éditable).
+4. Crée `Assets/04_Scenes/Lobby.unity` avec un GameObject `LobbyController`
+   (sans NetworkManager — c'est celui de Menu qui gère la session).
+5. Configure les Build Settings (Menu en index 0, Lobby en 1, JhiderScene
+   en 2).
+6. Affiche une confirmation, puis tu peux presser Play.
+
+> Le prefab contient aussi un `NetworkManagerHUD` legacy qui affiche des
+> boutons HOST / CLIENT / STOP. Tu peux le décocher dans l'inspecteur de
+> l'instance si tu ne veux pas le voir superposé au menu custom.
+
+Sous-commandes utiles (Tools → Soapbox → ...) :
+- `Setup Menu scene only` / `Setup Lobby scene only` : recrée une seule scène.
+- `Configure Build Settings` : reconfigure les scenes sans toucher aux fichiers.
+
+#### Option B — procédure manuelle
+
+1. **Créer `Assets/04_Scenes/Menu.unity`** (File → New Scene → vide).
+   - Ajouter un GameObject `NetworkManager` avec :
+     - `Mirror.NetworkManager` script → remplacer par `SoapboxNetworkManager`
+     - `FizzySteamworks` (transport) sur le même GameObject
+     - `Soapbox.Networking.SteamLobbyManager` sur le même GameObject
+     - `Soapbox.Menu.MenuInputAdapter` sur le même GameObject
+     - `Soapbox.Menu.MenuController` sur le même GameObject
+   - Sauvegarder.
+
+2. **Créer `Assets/04_Scenes/Lobby.unity`** (même GameObject `NetworkManager`
+   avec en plus `Soapbox.Menu.LobbyController`).
+
+3. **Build Settings** (File → Build Settings) : ajouter `Menu.unity`,
+   `Lobby.unity`, `JhiderScene.unity` avec `Menu` en index 0.
+
+4. **Build initial du Canvas** (à faire **une fois** par scène) :
+   - Sélectionne le GameObject `NetworkManager` dans `Menu.unity`.
+   - Dans l'inspecteur du composant `MenuController`, repère le sous-composant
+     `MenuUIBuilder` (ajouté automatiquement via `[RequireComponent]`).
+   - Clique droit sur l'en-tête du `MenuUIBuilder` → **"Build Menu UI"**.
+   - Le Canvas + EventSystem + tous les boutons sont créés, et **la scène
+     est sauvegardée automatiquement**. Tu peux maintenant sélectionner
+     n'importe quel bouton dans la hiérarchie, le déplacer, changer
+     sa couleur, son texte, etc. — tout est éditable normalement.
+   - Fais pareil dans `Lobby.unity` avec le composant `LobbyUIBuilder` →
+     "Build Lobby UI".
+
+5. **Test rapide** :
+   - Lancer en éditeur (play) — la scène Menu doit s'afficher.
+   - Cliquer **HOST STEAM** — Steam crée un lobby, la scène bascule sur Lobby.
+   - Cliquer **INVITER UN AMI** (dans le Lobby) — l'overlay Steam s'ouvre.
+   - Cliquer **HOST LAN** — démarre un host sans Steam, utile pour playtest
+     en local. Les clients se connectent via **REJOINDRE EN LAN** (panel
+     modal qui demande l'IP).
+   - Build standalone, host dans l'éditeur → inviter l'ami depuis Steam →
+     le guest arrive dans la même scène Lobby.
+
+### Modes de connexion (Steam + LAN)
+
+Le menu propose trois entrées distinctes, toutes routées via `EventManager` :
+
+| Bouton | Où | Comportement |
+|---|---|---|
+| **HOST STEAM** | Menu | Crée un lobby Steam (FriendsOnly), `StartHost()`, transition vers Lobby. Invite via l'overlay Steam. |
+| **HOST LAN** | Menu | `StartHost()` direct, sans Steam. Utilise le transport Mirror de base (UDP). Bascule vers Lobby. |
+| **REJOINDRE EN LAN** | Modal (ouvert depuis le Menu via... voir ci-dessous) | Panel InputField IP, `StartClient()` vers l'IP saisie. IP mémorisée (PlayerPrefs). |
+
+> Note : pour **rejoindre une partie Steam**, c'est l'overlay Steam
+> (Shift+Tab) qui gère — pas de bouton custom. La Menu affiche un hint
+> statique pour le rappeler au joueur.
+
+### Le Canvas auto-construit est éditable
+
+Le pattern `BuildIfNeeded()` + `Build()` (marqué `[ContextMenu]`) fait que :
+
+- **Premier ajout du `MenuController`** → `BuildIfNeeded()` détecte qu'il
+  n'y a pas encore de Canvas → appelle `Build()` → crée tout et **save
+  la scène**.
+- **F5 / play ultérieurs** → `BuildIfNeeded()` voit que `_built == true`
+  (champs sérialisé) → ne reconstruit rien. Le Canvas survit.
+- **Modifications manuelles** → tu changes la couleur d'un bouton dans
+  l'inspecteur, Ctrl+S, et ça reste.
+- **Tu casses le Canvas par erreur** → re-clique "Build Menu UI" sur
+  l'inspecteur pour tout reconstruire (attention : ça écrase tes modifs).
+
+### Limitations connues du lot 2
+
+- **Rejoindre via Steam** = passer par l'overlay Steam (pas de liste
+  custom). Le hint statique du Menu le rappelle.
+- **Pas de ready check, pas de chat, pas de kick, pas de team.**
+- Le scénario nominal : host clique HOST STEAM → lobby créé +
+  `ServerChangeScene` immédiat. Si un guest accepte une invitation APRÈS
+  le SceneChange, il rejoint dans la scène courante (Mirror gère la
+  synchro), UX non raffinée.
+- Le roster ne montre pas encore les noms Steam (juste `Joueur <connectionId>`).
+- **HOST LAN** suppose que tu utilises un transport Mirror UDP de base
+  (KCP / Telepathy) sur le NetworkManager. Si tu veux du LAN discovery
+  automatique (zéro saisie IP), il faudra ajouter `Mirror.Discovery`
+  dans un lot suivant.
 
 ---
 

@@ -1,101 +1,70 @@
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Soapbox.Networking
 {
-    /// <summary>
-    /// Marker component placed on scene Transforms where vehicles should spawn.
-    ///
-    /// Why a custom marker instead of Mirror's <c>NetworkStartPosition</c>?
-    ///   • We can group spawn points per team / per lobby without forcing the
-    ///     user to drop empty GOs around the level.
-    ///   • We can draw a gizmo (arrow) so level designers see facing direction.
-    ///   • The NetworkManager auto-registers/unregisters them via
-    ///     <c>OnEnable</c> / <c>OnDisable</c>, no manual wiring required.
-    ///
-    /// Set <see cref="_team"/> to a non-empty value to gate spawn usage to a
-    /// matching key on the connection. Leave empty for "any team".
-    /// </summary>
     [DisallowMultipleComponent]
     public class SoapboxSpawnPoint : MonoBehaviour
     {
         private static readonly List<SoapboxSpawnPoint> Registry = new();
 
-        [Tooltip("Optional tag. Only connections that pass the same tag will spawn here. " +
-                 "Leave empty to allow any connection.")]
-        [SerializeField] private string _team = "";
+        [Tooltip("Position sur la grille de départ (0 = Pole Position, 1 = 2ème, etc.)")]
+        [SerializeField] private int gridIndex = 0;
 
-        [Tooltip("If true, the spawn is consumed once a player has used it. " +
-                 "Useful for race starts where each player gets a unique slot.")]
-        [SerializeField] private bool _singleUse;
+        [Tooltip("Si vrai, le point est bloqué une fois qu'un joueur y a spawn.")]
+        [SerializeField] private bool singleUse = true;
 
-        private bool _consumed;
+        private bool isConsumed;
+        public bool IsAvailable => !isConsumed;
 
-        public string Team => _team;
-        public bool IsAvailable => !_consumed;
+        private void OnEnable()
+        {
+            Registry.Add(this);
+            // Trie automatiquement pour toujours assigner la pole position en premier
+            Registry.Sort((a, b) => a.gridIndex.CompareTo(b.gridIndex));
+        }
 
-        // -------------------------------------------------------------------------
-        // Registry
-        // -------------------------------------------------------------------------
-
-        private void OnEnable() => Registry.Add(this);
         private void OnDisable() => Registry.Remove(this);
 
-        public static IReadOnlyList<SoapboxSpawnPoint> All => Registry;
-
-        // -------------------------------------------------------------------------
-        // Queries
-        // -------------------------------------------------------------------------
-
-        /// <summary>
-        /// Picks the first available spawn point. <paramref name="team"/> can be
-        /// null/empty to ignore the team filter.
-        /// Returns null if nothing matches.
-        /// </summary>
-        public static SoapboxSpawnPoint Pick(string team = null)
+        public static SoapboxSpawnPoint Pick()
         {
-            // Drop any destroyed entries without mutating the list during iteration.
             Registry.RemoveAll(sp => sp == null);
 
             for (int i = 0; i < Registry.Count; i++)
             {
                 SoapboxSpawnPoint sp = Registry[i];
-                if (sp == null || !sp.IsAvailable) continue;
-                if (!string.IsNullOrEmpty(team) && sp._team != team) continue;
+                if (!sp.IsAvailable) continue;
 
-                if (sp._singleUse) sp._consumed = true;
+                if (sp.singleUse) sp.isConsumed = true;
                 return sp;
             }
 
-            return null;
+            return null; // Plus de place sur la grille
         }
 
-        /// <summary>
-        /// Releases a previously consumed single-use spawn point so it can be
-        /// reused (e.g. after a round restart).
-        /// </summary>
         public static void ReleaseAll()
         {
             for (int i = 0; i < Registry.Count; i++)
             {
-                if (Registry[i] != null) Registry[i]._consumed = false;
+                if (Registry[i] != null) Registry[i].isConsumed = false;
             }
         }
-
-        // -------------------------------------------------------------------------
-        // Editor
-        // -------------------------------------------------------------------------
 
 #if UNITY_EDITOR
         private void OnDrawGizmos()
         {
-            Gizmos.color = _consumed ? new Color(1f, 0.4f, 0.4f, 0.5f) : new Color(0.3f, 1f, 0.4f, 0.8f);
-            Gizmos.DrawWireSphere(transform.position, 0.4f);
+            Gizmos.color = isConsumed ? new Color(1f, 0.2f, 0.2f, 0.5f) : new Color(0.2f, 1f, 0.2f, 0.8f);
+            Gizmos.DrawWireSphere(transform.position, 0.5f);
 
-            Vector3 fwd = transform.forward * 1.2f;
-            Gizmos.DrawLine(transform.position, transform.position + fwd);
-            Gizmos.DrawLine(transform.position + fwd, transform.position + fwd - transform.right * 0.3f + transform.forward * 0.3f);
-            Gizmos.DrawLine(transform.position + fwd, transform.position + fwd + transform.right * 0.3f + transform.forward * 0.3f);
+            // Flèche de direction
+            Vector3 fwd = transform.forward * 1.5f;
+            Gizmos.DrawRay(transform.position, fwd);
+            
+            // Affiche le numéro sur la grille direct dans la scène
+            Handles.Label(transform.position + Vector3.up * 1f, $"Grid: {gridIndex}");
         }
 #endif
     }

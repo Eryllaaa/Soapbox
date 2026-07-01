@@ -163,7 +163,9 @@ public class VehicleController : NetworkBehaviour
         HandleSteering();
         HandleBraking();
         HandleAirControl();
+#if UNITY_EDITOR
         HandleDebugAcceleration();
+#endif
     }
 
     // -------------------------------------------------------------------------
